@@ -1,0 +1,126 @@
+name: muse-agent
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes:
+      - ./models:/root/.ollama
+    networks:
+      - agent-internal
+    mem_limit: 3g
+    cpus: 1.0
+    pids_limit: 256
+    security_opt:
+      - no-new-privileges:true
+    # 不发布 Ollama 端口到宿主机或公网。
+
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      - ollama
+    ports:
+      - "100.77.77.138:8765:8765"
+    volumes:
+      - ./data:/data
+    networks:
+      - agent-internal
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 128
+    mem_limit: 768m
+    cpus: 0.75
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/health', timeout=3)"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+
+  executor:
+    build:
+      context: ./executor
+      dockerfile: Dockerfile
+    image: muse-agent-executor:0.4
+    restart: "no"
+    user: "10002:10002"
+    network_mode: none
+    read_only: true
+    tmpfs:
+      - /tmp:size=256m,noexec,nosuid,nodev
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 64
+    mem_limit: 768m
+    cpus: 0.75
+    volumes:
+      - type: bind
+        source: ./app/learning_db.py
+        target: /input/learning_db.py
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./app/migrate_v4.py
+        target: /input/migrate_v4.py
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./tests/conftest.py
+        target: /input/conftest.py
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./tests/test_v4_catalog.py
+        target: /input/test_v4_catalog.py
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./workspace/seed/learning.sqlite3
+        target: /seed/learning.sqlite3
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./workspace/proposals
+        target: /output
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./workspace/candidates
+        target: /candidates
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./workspace/approvals
+        target: /approvals
+        read_only: true
+        bind:
+          create_host_path: false
+
+networks:
+  agent-internal:
+    name: muse-agent-net
+    driver: bridge
+    internal: false

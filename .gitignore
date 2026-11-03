@@ -1,0 +1,43 @@
+# Existing project exclusions
+.env
+data/
+logs/
+models/
+__pycache__/
+*.pyc
+.venv/
+
+# Muse runtime workspace and credentials
+workspace/
+*.pem
+*.key
+*.secret
+
+# SQLite databases and sidecar files
+*.sqlite
+*.sqlite3
+*.sqlite3-*
+*.db
+*.db-wal
+*.db-shm
+
+# Python caches and test artifacts
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Historical backups and snapshots
+*.bak
+*.bak.*
+*.bak-*
+*.before-*
+*.v3-dal-*
+
+# Other local runtime files
+*.log
+venv/
+
+# All backup suffix variants
+*.bak*
