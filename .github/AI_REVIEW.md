@@ -2,10 +2,21 @@
 
 ## 1. Review Objectives
 
-AI review is an advisory security and quality review.
-It does not replace human approval.
+AI review is a best-effort advisory security and quality review
+for non-draft Pull Requests targeting the `main` branch.
 
-Review every Pull Request before merging.
+The GitHub Actions workflow attempts an AI review when a Pull Request
+is opened, synchronized, reopened, or marked ready for review.
+
+AI review is not a required merge check and does not replace human approval.
+A review may be unavailable because of API errors, service outages,
+rate limits, quota limits, or other execution failures.
+
+A successful AI review does not guarantee that all defects or vulnerabilities
+have been detected. Maintainers must independently review and approve
+Pull Requests before merging.
+
+AI review must never automatically approve, merge, deploy, or modify a Pull Request.
 
 ## 2. Review Priority
 
